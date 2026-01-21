@@ -22,7 +22,6 @@ FROM base AS runner
 WORKDIR /app/apps/web
 COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/apps/web/.next ./.next
-COPY --from=build /app/apps/web/public ./public
 COPY --from=build /app/apps/web/package.json ./package.json
 EXPOSE 3000
 CMD ["pnpm", "start"]
