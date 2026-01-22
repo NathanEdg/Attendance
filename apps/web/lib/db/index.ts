@@ -1,16 +1,30 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
+let _db: PostgresJsDatabase<typeof schema> | null = null;
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is not set");
+function getDb(): PostgresJsDatabase<typeof schema> {
+  if (_db) return _db;
+
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "DATABASE_URL environment variable is not set. Ensure it's provided at runtime (CI/hosting) or via a .env file locally."
+    );
+  }
+
+  const client = postgres(connectionString);
+  _db = drizzle(client, { schema });
+  return _db;
 }
 
-// Create postgres connection
-const client = postgres(connectionString);
-
-export const db = drizzle(client, { schema });
+// Preserve the same API shape: `db.select()...` etc., while deferring init until first use.
+export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
+  get(_target, prop, _receiver) {
+    const real = getDb() as any;
+    return Reflect.get(real, prop);
+  },
+}) as PostgresJsDatabase<typeof schema>;
 
 export * from "./schema";
