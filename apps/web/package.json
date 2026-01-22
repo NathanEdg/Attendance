@@ -10,7 +10,6 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "typecheck": "tsc --noEmit",
-
     "db:generate": "drizzle-kit generate --config ./drizzle.config.cjs",
     "db:migrate": "drizzle-kit migrate --config ./drizzle.config.cjs",
     "db:push": "drizzle-kit push --config ./drizzle.config.cjs",
@@ -18,12 +17,14 @@
   },
   "dependencies": {
     "@next/env": "^16.1.4",
+    "@types/jspdf": "^2.0.0",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.4.15",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "html5-qrcode": "^2.3.8",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.475.0",
     "nanoid": "^5.1.6",
     "next": "16.0.10",

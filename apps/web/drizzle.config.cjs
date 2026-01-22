@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 
 /** Load env from monorepo root */
 dotenv.config({
-  path: path.resolve(__dirname, "../../.env"),
+  path: path.resolve(__dirname, "../../.env.local"),
 });
 
 module.exports = {

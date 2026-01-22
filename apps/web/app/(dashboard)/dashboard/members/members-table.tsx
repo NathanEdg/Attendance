@@ -29,10 +29,18 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Badge } from "@workspace/ui/components/badge";
 import { Progress } from "@workspace/ui/components/progress";
-import { MoreHorizontal, Pencil, Trash2, QrCode, Plus } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  QrCode,
+  Plus,
+  FileDown,
+} from "lucide-react";
 import { MemberDialog } from "./member-dialog";
 import { QRCodeDialog } from "./qr-code-dialog";
 import { deleteMember } from "./actions";
+import { generateQRCodesPDF } from "./export-qr-pdf";
 
 type MemberWithAttendance = {
   id: string;
@@ -52,6 +60,7 @@ export function MembersTable({ members }: { members: MemberWithAttendance[] }) {
   const [selectedMember, setSelectedMember] =
     useState<MemberWithAttendance | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   const handleEdit = (member: MemberWithAttendance) => {
     setSelectedMember(member);
@@ -86,9 +95,27 @@ export function MembersTable({ members }: { members: MemberWithAttendance[] }) {
     setDialogOpen(true);
   };
 
+  const handleExportPDF = async () => {
+    if (members.length === 0) return;
+    setExportingPDF(true);
+    try {
+      await generateQRCodesPDF(members);
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
+        <Button
+          variant="outline"
+          onClick={handleExportPDF}
+          disabled={exportingPDF || members.length === 0}
+        >
+          <FileDown className="mr-2 size-4" />
+          {exportingPDF ? "Generating..." : "Export QR Codes PDF"}
+        </Button>
         <Button onClick={handleAddNew}>
           <Plus className="mr-2 size-4" />
           Add Member

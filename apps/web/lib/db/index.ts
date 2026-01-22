@@ -10,7 +10,7 @@ function getDb(): PostgresJsDatabase<typeof schema> {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error(
-      "DATABASE_URL environment variable is not set. Ensure it's provided at runtime (CI/hosting) or via a .env file locally."
+      "DATABASE_URL environment variable is not set. Ensure it's provided at runtime (CI/hosting) or via a .env.local file locally."
     );
   }
 
