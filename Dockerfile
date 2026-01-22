@@ -1,68 +1,59 @@
 # syntax=docker/dockerfile:1
 
-########################
-# Base image
-########################
 FROM node:20-alpine AS base
-
 ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1
+    NEXT_TELEMETRY_DISABLED=1 \
+    PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
-WORKDIR /app
-
-# Install required OS deps and enable pnpm via corepack
 RUN apk add --no-cache libc6-compat \
  && corepack enable pnpm
 
-########################
-# Install dependencies
-########################
-FROM base AS deps
-
 WORKDIR /app
 
-# Only copy files needed for dependency resolution
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY apps/web/package.json apps/web/package.json
+########################
+# deps
+########################
+FROM base AS deps
+WORKDIR /app
 
-# Install all workspace dependencies (including web)
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+# COPY turbo.json ./        # if you have it
+# COPY .npmrc ./            # if you have it
+
 RUN pnpm install --frozen-lockfile
 
 ########################
-# Build app
+# build
 ########################
 FROM base AS build
-
 WORKDIR /app
 
-# Copy full repo (source, configs, etc.)
+# Copy full repo
 COPY . .
+ENV CI=true
+# Install using the lockfile (this will recreate node_modules in this stage)
+RUN pnpm install --frozen-lockfile
 
-# Reuse installed deps from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-
-# Build only the web app
-RUN pnpm --filter web build
+# Root build (can run turbo internally)
+RUN pnpm build
 
 ########################
-# Runtime image
+# runner
 ########################
 FROM base AS runner
-
-ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1
-
-# Use repo root as workdir so pnpm workspace resolution works
 WORKDIR /app
 
-# Copy production deps and built files
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    CI=true
+
+# Copy only what you need at runtime
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/web/.next ./apps/web/.next
 COPY --from=build /app/apps/web/package.json ./apps/web/package.json
-COPY --from=build /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000
 
-# Start the Next.js app from the workspace
-CMD ["pnpm", "--filter", "web", "start"]
+CMD ["pnpm", "start"]
