@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { DashboardLayout } from "@/components/dashboard-layout";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardRootLayout({
   children,
 }: {

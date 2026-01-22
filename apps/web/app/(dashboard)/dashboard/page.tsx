@@ -8,6 +8,8 @@ import {
 } from "@workspace/ui/components/card";
 import { Users, CalendarCheck, Calendar, TrendingUp } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function getStats() {
   const today = new Date().toISOString().split("T")[0];
 
